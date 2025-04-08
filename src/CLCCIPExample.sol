@@ -67,6 +67,12 @@ contract CLCCIPExample is CCIPReceiver, Ownable{
     event CLCCIPExample_StudentProfileUpdated(address student, address newStudentAddress);
     ///@notice event emitted when a ccip message is received
     event CLCCIPExample_MessageReceived(bytes32 messageId, uint64 sourceChainSelector, Profile profile);
+    ///@notice event emitted when a new source chain is enabled
+    event CLCCIPExample_NewSourceChainAllowlisted(uint64 sourceChainSelector);
+    ///@notice event emitted when a new sender is added to a chain
+    event CLCCIPExample_AllowedSenderUpdatedForTheFollowingChain(uint64 sourceChainSelector, address sender);
+    ///@notice event emitted when a new CCIP message is sent
+    event CLCCIPExample_MessageSent(bytes32 messageId, uint64 destinationChainSelector, address user,uint256 fees);
 
     /*///////////////////////////////////
                 Errors
@@ -79,6 +85,8 @@ contract CLCCIPExample is CCIPReceiver, Ownable{
     error CLCCIPExample_SourceChainNotAllowed(uint64 sourceChainSelector);
     ///@notice error emitted when the cross-chain sender is not allowed to perform updates
     error CLCCIPExample_SenderNotAllowed(address sender);
+    ///@notice error emitted if the contract doesn't have enough LINK balance to process the transaction
+    error CLCCIPExample_NotEnoughBalance(uint256 linkBalance, uint256 fees);
 
     /*///////////////////////////////////
                 Modifiers
@@ -140,6 +148,30 @@ contract CLCCIPExample is CCIPReceiver, Ownable{
 
         emit CLCCIPExample_StudentProfileUpdated(_student, _newStudentAddress);
     }
+    
+    /**
+        * @dev Updates the allowlist status of a source chain
+        * @notice This function can only be called by the owner.
+        * @param _sourceChainSelector The selector of the source chain to be updated.
+        * @param allowed The allowlist status to be set for the source chain.
+    */
+    function setAllowlistSourceChain(uint64 _sourceChainSelector, bool allowed) external onlyOwner {
+        s_allowlistedSourceChains[_sourceChainSelector] = allowed;
+
+        emit CLCCIPExample_NewSourceChainAllowlisted(_sourceChainSelector);
+    }
+
+    /**
+        * @dev Updates the allowlist status of a sender for transactions.
+        * @notice This function can only be called by the owner.
+        * @param _sourceChainSelector the chain identifier to enable the sender
+        * @param _sender The address of the sender to be updated.
+    */
+    function allowlistSender(uint64 _sourceChainSelector, address _sender) external onlyOwner {
+        s_allowlistedSenders[_sourceChainSelector] = _sender;
+
+        emit CLCCIPExample_AllowedSenderUpdatedForTheFollowingChain(_sourceChainSelector, _sender);
+    }
 
     /*///////////////////////////////////
                 public
@@ -148,24 +180,94 @@ contract CLCCIPExample is CCIPReceiver, Ownable{
     /*///////////////////////////////////
                 internal
     ///////////////////////////////////*/
-    function _ccipReceive(Client.Any2EVMMessage memory any2EvmMessage)
+    /**
+        *@notice standard Chainlink function to process received messages
+        *@param _any2EvmMessage the message struct to be processed
+    */
+    function _ccipReceive(Client.Any2EVMMessage memory _any2EvmMessage)
         internal
         override
-        onlyAllowlisted(any2EvmMessage.sourceChainSelector, abi.decode(any2EvmMessage.sender, (address)))
+        onlyAllowlisted(_any2EvmMessage.sourceChainSelector, abi.decode(_any2EvmMessage.sender, (address)))
     {
-        (address student, Profile memory profile) = abi.decode(any2EvmMessage.data, (address, Profile));
+        (address student, Profile memory profile) = abi.decode(_any2EvmMessage.data, (address, Profile));
 
         s_userProfile[student] = profile;
 
-        emit CLCCIPExample_MessageReceived(any2EvmMessage.messageId, any2EvmMessage.sourceChainSelector, profile);
+        emit CLCCIPExample_MessageReceived(_any2EvmMessage.messageId, _any2EvmMessage.sourceChainSelector, profile);
     }
 
     /*///////////////////////////////////
                 private
     ///////////////////////////////////*/
+    /**
+        * @notice Sends data and transfer tokens to receiver on the destination chain.
+        * @notice Pay for fees in LINK.
+        * @dev Assumes your contract has sufficient LINK to pay for CCIP fees.
+        * @param _destinationChainSelector The identifier (aka selector) for the destination blockchain.
+        * @param _user The address of the user to be updated
+        * @param _profile The user data to be distributed
+        * @return messageId_ The ID of the CCIP message that was sent.
+    */
+    function sendMessage(uint64[] calldata _destinationChainSelector, address _user, Profile memory _profile) private returns (bytes32 messageId_){
+        // Create an EVM2AnyMessage struct in memory with necessary information for sending a cross-chain message
+        Client.EVM2AnyMessage memory evm2AnyMessage = _buildCCIPMessage(
+            _user,
+            abi.encode(_user, _profile)
+        );
+
+        // Initialize a router client instance to interact with cross-chain router
+        IRouterClient router = IRouterClient(this.getRouter());
+
+        uint256 numberOfChains = _destinationChainSelector.length;
+
+        for(uint256 i = 0; i < numberOfChains; ++i){
+            // Get the fee required to send the CCIP message
+            uint256 fees = router.getFee(_destinationChainSelector[i], evm2AnyMessage);
+            
+            uint256 linkBalance = i_link.balanceOf(address(this));
+            if (fees > linkBalance) revert CLCCIPExample_NotEnoughBalance(linkBalance, fees);
+            
+            // approve the Router to transfer LINK tokens on contract's behalf. It will spend the fees in LINK
+            i_link.approve(address(router), fees);
+            
+            // Send the message through the router and store the returned message ID
+            messageId_ = router.ccipSend(_destinationChainSelector[i], evm2AnyMessage);
+            
+            // Emit an event with message details
+            emit CLCCIPExample_MessageSent(messageId_, _destinationChainSelector[i], _user, fees);
+        }
+    }
 
     /*///////////////////////////////////
                 View & Pure
     ///////////////////////////////////*/
+    /**
+        * @notice Construct a CCIP message.
+        * @dev This function will create an EVM2AnyMessage struct with all the necessary information for programmable tokens transfer.
+        * @param _user The address of the receiver.
+        * @param _data The encoded struct to update other chains
+        * @return message_ Returns an EVM2AnyMessage struct which contains information for sending a CCIP message.
+    */
+    function _buildCCIPMessage(
+        address _user,
+        bytes memory _data
+    ) private view returns (Client.EVM2AnyMessage memory message_) {
+        // Set the token amounts
+        Client.EVMTokenAmount[] memory tokenAmounts;
+
+        // Create an EVM2AnyMessage struct in memory with necessary information for sending a cross-chain message
+        message_ = Client.EVM2AnyMessage({
+            receiver: abi.encode(_user),
+            data: _data,
+            tokenAmounts: tokenAmounts,
+            extraArgs: Client._argsToBytes(
+                Client.EVMExtraArgsV2({
+                    gasLimit: 300_000,
+                    allowOutOfOrderExecution: true
+                })
+            ),
+            feeToken: address(i_link)
+        });
+    }
 
 }
