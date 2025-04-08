@@ -87,8 +87,8 @@ contract HelperConfig is Script {
             ///@notice vm.envAddress("NAME_OF_THE_VARIABLE_ON_.ENV_FILE")
             admin: vm.envAddress("ADMIN_TESTNET_PUBLIC_KEY"),
             multisig: address(0),
-            linkToken:  address(0),
-            ccipRouter:  address(0)
+            linkToken:  0x779877A7B0D9E8603169DdbD7836e478b4624789,
+            ccipRouter:  0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59
         });
     }
 
@@ -98,8 +98,8 @@ contract HelperConfig is Script {
             ///@notice vm.envAddress("NAME_OF_THE_VARIABLE_ON_.ENV_FILE")
             admin: vm.envAddress("ADMIN_TESTNET_PUBLIC_KEY"),
             multisig: address(0),
-            linkToken:  address(0),
-            ccipRouter:  address(0)
+            linkToken:  0xE4aB69C077896252FAFBD49EFD26B5D171A32410,
+            ccipRouter:  0xD3b06cEbF099CE7DA4AcCf578aaebFDBd6e88a93
         });
     }
 
