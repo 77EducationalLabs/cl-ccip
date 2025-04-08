@@ -10,48 +10,43 @@ import { DeployScript } from "script/Deploy.s.sol";
 import { HelperConfig } from "script/helpers/HelperConfig.s.sol";
 
 ///@notice Protocol Base Contracts
-//Import the contracts that will be tested
+import { CLCCIPExample } from "src/CLCCIPExample.sol";
 
-///@notice Protocol Upgrade Initializers
-//If upgradeable, import scripts for deploy/initialization
+///@notice Chainlink helpers
+import { CCIPLocalSimulator, LinkToken, IRouterClient, BurnMintERC677Helper } from "@chainlink/local/src/ccip/CCIPLocalSimulator.sol";
+import { Client } from "@chainlink/contracts/src/v0.8/ccip/libraries/Client.sol";
 
-
-contract BaseTests is Test {
-    ///@notice Instantiate Scripts
-    DeployScript public s_deploy;
-    HelperConfig public s_helperConfig;
-    
+contract BaseTests is Test {    
     ///@notice Instantiate Protocol Contracts
+    CLCCIPExample s_example;
 
-    ///@notice Instantiate Upgrade Initializers
-    //if exists, otherwise delete it
-
-    ///@notice Proxied Interfaces
-    //if exists, otherwise delete it
+    ///@notice Chainlink local instance
+    CCIPLocalSimulator s_local;
+    uint64 s_chainSelector;
+    IRouterClient s_sourceRouter;
+    LinkToken s_linkToken;
+    BurnMintERC677Helper s_ccipBnM;
 
     //Addresses
     address constant s_owner = address(77);
-    address constant s_multiSig = address(777);
     address constant s_user02 = address(2);
-    address constant s_user03 = address(3);
-    address constant s_user04 = address(4);
-    address constant s_user05 = address(5);
-
-    //Utils - Fake Addresses
-    address uniswapRouter = makeAddr("uniswapRouter");
+    address constant s_mockMainnetAddress = address(777);
 
     function setUp() public virtual {
-        ///@notice 1. Deploys DeployInit script
-        s_deploy = new DeployScript();
+        ///@notice Initialization of Chainlink Local
+        s_local = new CCIPLocalSimulator();
 
-        ///@notice 2. Deploy Base Contracts Using the deploy script and retrieve contracts deployed
         (
-            s_helperConfig
-            // s_77,
-            // s_777,
-            // s_7777,
-            // s_77777,
-        ) = s_deploy.run();
+            s_chainSelector,
+            s_sourceRouter,
+            ,
+            ,
+            s_linkToken,
+            s_ccipBnM,
+        ) = s_local.configuration();
+
+        ///@notice 2. As we are using CCIPLocalSimulator here, we will not use a script to deploy
+        s_example = new CLCCIPExample(address(s_linkToken), address(s_sourceRouter), s_owner);
     }
 
     

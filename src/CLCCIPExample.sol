@@ -265,11 +265,6 @@ contract CLCCIPExample is CCIPReceiver, Ownable{
         * @return messageId_ The ID of the CCIP message that was sent.
     */
     function _sendMessage(address _user, Profile memory _profile) private returns (bytes32 messageId_){
-        // Create an EVM2AnyMessage struct in memory with necessary information for sending a cross-chain message
-        Client.EVM2AnyMessage memory evm2AnyMessage = _buildCCIPMessage(
-            _user,
-            abi.encode(_user, _profile)
-        );
 
         // Initialize a router client instance to interact with cross-chain router
         IRouterClient router = IRouterClient(this.getRouter());
@@ -278,6 +273,13 @@ contract CLCCIPExample is CCIPReceiver, Ownable{
 
         for(uint256 i = 0; i < numberOfChains; ++i){
             uint64 currentChainSelector = s_allowlistedReceivers[i];
+
+            // Create an EVM2AnyMessage struct in memory with necessary information for sending a cross-chain message
+            Client.EVM2AnyMessage memory evm2AnyMessage = _buildCCIPMessage(
+                ///@notice receiver and sender are the same. So we can use the same mapping
+                s_allowlistedSenders[currentChainSelector],
+                abi.encode(_user, _profile)
+            );
 
             // Get the fee required to send the CCIP message
             uint256 fees = router.getFee(currentChainSelector, evm2AnyMessage);
