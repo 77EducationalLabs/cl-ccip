@@ -20,49 +20,55 @@
   We turn innovation into reality through education and security, one block at a time.
 </h1>
 </div>
+
 <br>
 
-We believe that education and security are Web3's main challenges, and we decided to solve them. To do so, we offer hands-on Institutional Training and on-demand courses in Portuguese. These courses approach the learning process with a security-first mindset, ensuring students receive the market best practices to become solid professionals to tackle all challenges the ecosystem may face.
+We believe that education and security are Web3's main challenges, and we decided to tackle them. To do so, we offer hands-on Institutional Training and on-demand courses in Portuguese. These courses approach the learning process with a security-first mindset, ensuring students receive the market's best practices to become solid professionals to tackle all challenges the ecosystem may face.
 
 This repository is part of this goal.
 
 </br>
 
-## Repository framework
-This repo aims to provide a framework for developers to build their projects on top of, as a template.
+## About this Project
+This is an example implementation of the Chainlink CCIP solution. It aims to provide insights for builders who want to learn how to use Automation in their decentralized applications.
 
-The 77 Foundry Template offers the structure for developers to create, deploy, and test a protocol. It works as a checkbox guide to ensure that most of the needed steps are taken.
+<div align="center">
 
-<br>
+⚠ The contracts inside of this repo weren't audited or went through a deep analysis and could contain vulnerabilities.
+<br/>
+⚠ DO NOT USE IN PRODUCTION!
 
-## About Us
-The 77 Educational Labs is a 77 Innovation Labs branch focused on EVM education and security. It offers courses for all knowledge levels, from beginners to advanced.
+</div>
 
 ## How to Install
 
 **1. Clone repository**
 
 ```
-forge init --template https://github.com/77EducationalLabs/77-foundry-template.git {YOUR_ENVIRONMENT_NAME}
+git clone https://github.com/77EducationalLabs/cl-ccip.git
+cd cl-automation
 ```
 
 <br>
 
-**2. Update the `.env.example` to `.env` and add environmental variables.**
-   - NEVER ADD A PRIVATE KEY IN PLAIN TEXT IN YOUR `.ENV` FILE
+**2. Environmental Variables**
+<br>
+Ideally, create and `.env.enc` file using [Chainlink Encryption](https://www.npmjs.com/package/@chainlink/env-enc) or update the `.env.example` to `.env` and add environmental variables.
+
+<div align="center"> ⚠️ NEVER ADD A PRIVATE KEY IN PLAIN TEXT IN YOUR `.ENV` FILE ⚠️ </div>
 
 <br>
 
 **3. Install Dependencies**
 
 ```
-forge install
+make install
 ```
 
 **or**
 
 ```
-make install
+forge install
 ```
 
 <br>
@@ -70,22 +76,24 @@ make install
 **4. Compile**
 
 ```
-forge build
+make build
 ```
 
 **or**
 
 ```
-make build
+forge build
 ```
 
 <br>
 
 **5. Update the Makefile environment variables**
+<br>
+Makefile may not contain all the information you may need to run tests or deploys. Check and update it accordingly.
 
 <br>
 
-**6. From now on, you can build your project**
+**6. Ad Astra et Ultra 🚀**
 
 </br>
 </br>

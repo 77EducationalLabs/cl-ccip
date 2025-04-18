@@ -265,7 +265,6 @@ contract CLCCIPExample is CCIPReceiver, Ownable{
         * @return messageId_ The ID of the CCIP message that was sent.
     */
     function _sendMessage(address _user, Profile memory _profile) private returns (bytes32 messageId_){
-
         // Initialize a router client instance to interact with cross-chain router
         IRouterClient router = IRouterClient(this.getRouter());
 
