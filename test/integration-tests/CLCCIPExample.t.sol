@@ -5,6 +5,8 @@ import { console } from "forge-std/Test.sol";
 
 import { BaseTests } from "test/helpers/BaseTests.t.sol";
 
+import { CLCCIPExample } from "src/CLCCIPExample.sol";
+
 contract CLCCIPExampleTest is BaseTests {
 
     ///@notice function test if contract send and receive the message properly (generic test)
@@ -19,5 +21,8 @@ contract CLCCIPExampleTest is BaseTests {
 
         vm.prank(s_user02);
         s_example.createStudentCrossChainProfile(s_mockMainnetAddress);
+
+        CLCCIPExample.Profile memory profile = s_example.getUserProfileInfo(s_user02);
+        assertEq(profile.mainnetAddress, s_mockMainnetAddress);
     }
 }

@@ -303,12 +303,12 @@ contract CLCCIPExample is CCIPReceiver, Ownable{
     /**
         * @notice Construct a CCIP message.
         * @dev This function will create an EVM2AnyMessage struct with all the necessary information for programmable tokens transfer.
-        * @param _user The address of the receiver.
+        * @param _crossChainProtocolReceiverContract The address of the receiver.
         * @param _data The encoded struct to update other chains
         * @return message_ Returns an EVM2AnyMessage struct which contains information for sending a CCIP message.
     */
     function _buildCCIPMessage(
-        address _user,
+        address _crossChainProtocolReceiverContract,
         bytes memory _data
     ) private view returns (Client.EVM2AnyMessage memory message_) {
         // Set the token amounts
@@ -316,7 +316,7 @@ contract CLCCIPExample is CCIPReceiver, Ownable{
 
         // Create an EVM2AnyMessage struct in memory with necessary information for sending a cross-chain message
         message_ = Client.EVM2AnyMessage({
-            receiver: abi.encode(_user),
+            receiver: abi.encode(_crossChainProtocolReceiverContract),
             data: _data,
             tokenAmounts: tokenAmounts,
             extraArgs: Client._argsToBytes(
@@ -327,5 +327,14 @@ contract CLCCIPExample is CCIPReceiver, Ownable{
             ),
             feeToken: address(i_link)
         });
+    }
+
+    /**
+        *@notice Getter function to access user profile info.
+        *@param _user the address of the student
+        *@return profile_ the student's profile
+    */
+    function getUserProfileInfo(address _user) external view returns(Profile memory profile_){
+        profile_ = s_userProfile[_user];
     }
 }
