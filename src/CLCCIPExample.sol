@@ -51,10 +51,6 @@ contract CLCCIPExample is CCIPReceiver, Ownable{
     ///@notice Immutable variable to store the Chainlink LINK token address
     IERC20 immutable i_link;
 
-    ///@notice magic number removal
-    uint8 constant ONE = 1;
-    uint8 constant TWO = 2;
-
     ///@notice variable to control the status of the control.
     //If (1)true, it becomes the main contract and can send cross-chain messages
     //if (2)false, it is only a receiver.
@@ -151,9 +147,7 @@ contract CLCCIPExample is CCIPReceiver, Ownable{
 
         emit CLCCIPExample_StudentProfileCreated(msg.sender, _mainnetAddress);
 
-        if(s_mainChain == ONE){
-            _sendMessage(msg.sender, profile);
-        }
+        _sendMessage(msg.sender, profile);
     }
 
     /**
@@ -171,9 +165,7 @@ contract CLCCIPExample is CCIPReceiver, Ownable{
 
         emit CLCCIPExample_StudentProfileUpdated(_student, _newStudentAddress);
 
-        if(s_mainChain == ONE){
-            _sendMessage(_student, profile);
-        }
+        _sendMessage(_student, profile);
     }
     
     /**
@@ -214,20 +206,6 @@ contract CLCCIPExample is CCIPReceiver, Ownable{
         s_allowlistedSenders[_sourceChainSelector] = _sender;
 
         emit CLCCIPExample_AllowedSenderUpdatedForTheFollowingChain(_sourceChainSelector, _sender);
-    }
-
-    /**
-        @notice function to enable the MAIN source of truth
-        *@dev ONE means true || TWO means false
-    */
-    function enableChain() external onlyOwner {
-        if(s_mainChain == ONE){
-            s_mainChain = TWO;
-        } else {
-            s_mainChain = ONE;
-        }
-
-        emit CLCCIPExample_CoreFunctionalityChanged(s_mainChain);
     }
 
     /*///////////////////////////////////
