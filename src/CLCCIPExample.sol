@@ -20,10 +20,11 @@ import { Client } from "@chainlink/contracts/src/v0.8/ccip/libraries/Client.sol"
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
-        *@title Chainlink CCIP Example
-        *@notice Simple project to exemplify CCIP usage
-        *@dev Do not use this contract in production
-        *@author i3arba - 77 Innovation Labs
+    *@title Chainlink CCIP Example
+    *@author i3arba - 77 Innovation Labs
+    *@notice This is an example of Chainlink CCIP implementation
+             and have intentional points of improvement for students to correct
+    *@dev do not use this is production. It's not audited and can have bugs.
 */
 contract CLCCIPExample is CCIPReceiver, Ownable{
 
